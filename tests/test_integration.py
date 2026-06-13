@@ -14,9 +14,7 @@ from watchdog.validation.avro_serde import AvroSerde
 from watchdog.pipeline.circuit_breaker import CircuitBreaker
 from watchdog.core.config import WatchDogConfig
 from watchdog.validation.content_validator import ContentValidator
-from watchdog.persistence.metadata import QualityMetadata
 from watchdog.core.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
-from watchdog.pipeline.router import Router
 from watchdog.validation.schema_validator import SchemaValidator
 from watchdog.validation.statistical_checker import StatisticalChecker
 
