@@ -27,7 +27,7 @@ class TestSchemaValidator:
         }
 
         bytes_io = io.BytesIO()
-        fastavro.schemaless_writer(bytes_io, validator.parsed_schema, record)
+        fastavro.schemaless_writer(bytes_io, validator.serde.parsed_schema, record)
         raw = bytes_io.getvalue()
 
         result = validator.validate_envelope(raw)

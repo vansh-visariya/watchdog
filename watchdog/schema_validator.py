@@ -1,52 +1,20 @@
 from __future__ import annotations
 
-import io
-import json
 from datetime import datetime
 from pathlib import Path
 
-import fastavro
-
+from watchdog.avro_serde import DEFAULT_SCHEMA_PATH, AvroSerde
 from watchdog.exceptions import SchemaViolation
 from watchdog.models import EventEnvelope
 
-SCHEMA_PATH = Path("contracts/event-envelope.avsc")
-
 
 class SchemaValidator:
-    def __init__(self, schema_path: str | Path = SCHEMA_PATH) -> None:
-        self.schema_path = Path(schema_path)
-        self.schema = self._load_schema()
-        self.parsed_schema = fastavro.parse_schema(self.schema)
-
-    def _load_schema(self) -> dict:
-        if not self.schema_path.exists():
-            raise SchemaViolation(f"Schema file not found: {self.schema_path}")
-        with open(self.schema_path) as f:
-            return json.load(f)
+    def __init__(self, schema_path: str | Path = DEFAULT_SCHEMA_PATH) -> None:
+        self.serde = AvroSerde(schema_path)
 
     def validate_envelope(self, raw_bytes: bytes) -> EventEnvelope:
-        try:
-            reader = fastavro.reader(io.BytesIO(raw_bytes))
-            records = list(reader)
-        except Exception:
-            records = None
-
-        if records is None or len(records) == 0:
-            record = self._deserialize_bare(raw_bytes)
-        else:
-            record = records[0]
-
+        record = self.serde.deserialize(raw_bytes)
         return self._to_envelope(record)
-
-    def _deserialize_bare(self, raw_bytes: bytes) -> dict:
-        try:
-            bytes_io = io.BytesIO(raw_bytes)
-            return fastavro.schemaless_reader(bytes_io, self.parsed_schema)
-        except Exception as e:
-            raise SchemaViolation(
-                f"Failed to deserialize Avro envelope: {e}"
-            ) from e
 
     def _to_envelope(self, record: dict) -> EventEnvelope:
         required_fields = [

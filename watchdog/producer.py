@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from confluent_kafka import Producer
 
+from watchdog.avro_serde import AvroSerde
 from watchdog.logging_setup import get_logger
 from watchdog.models import EventEnvelope, QuarantineRecord, ValidatedEvent
 
@@ -27,10 +29,11 @@ class WatchDogProducer:
         self.producer = Producer(producer_conf)
         self.clean_topic = config.clean_topic
         self.error_topic = config.error_topic
+        self.serde = AvroSerde()
 
     def produce_clean(self, event: ValidatedEvent) -> None:
         record = self._envelope_to_dict(event.envelope)
-        value = json.dumps(record).encode("utf-8")
+        value = self.serde.serialize(record)
         key = event.envelope.partition_key.encode("utf-8")
         self.producer.produce(
             topic=self.clean_topic,
