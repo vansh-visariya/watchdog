@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from watchdog.avro_serde import DEFAULT_SCHEMA_PATH, AvroSerde
-from watchdog.exceptions import SchemaViolation
-from watchdog.models import EventEnvelope
+from watchdog.validation.avro_serde import DEFAULT_SCHEMA_PATH, AvroSerde
+from watchdog.core.exceptions import SchemaViolation
+from watchdog.core.models import EventEnvelope
 
 
 class SchemaValidator:

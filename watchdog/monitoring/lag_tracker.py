@@ -3,15 +3,15 @@ from __future__ import annotations
 import time
 from collections import deque
 
-from watchdog.config import WatchDogConfig
-from watchdog.logging_setup import get_logger
-from watchdog.models import LagStats
+from watchdog.core.config import WatchDogConfig
+from watchdog.core.logging_setup import get_logger
+from watchdog.core.models import LagStats
 
 
 class LagTracker:
     def __init__(self, config: WatchDogConfig) -> None:
         self.max_allowed_lag_ms = config.window.max_allowed_lag_ms
-        self.logger = get_logger("watchdog.lag_tracker")
+        self.logger = get_logger("watchdog.monitoring.lag_tracker")
 
         self._recent_lags: deque[float] = deque()
         self._max_samples = 1000

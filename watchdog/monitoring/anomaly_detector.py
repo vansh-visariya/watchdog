@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from watchdog.config import WatchDogConfig
-from watchdog.logging_setup import get_logger
-from watchdog.models import AnomalySignal, BatchStats, LagStats, StallSignal
+from watchdog.core.config import WatchDogConfig
+from watchdog.core.logging_setup import get_logger
+from watchdog.core.models import AnomalySignal, BatchStats, LagStats, StallSignal
 
 
 class AnomalyDetector:
@@ -17,7 +17,7 @@ class AnomalyDetector:
         self.stall_drop_ratio = config.window.stall_volume_drop_ratio
         self.max_allowed_lag_ms = config.window.max_allowed_lag_ms
 
-        self.logger = get_logger("watchdog.anomaly_detector")
+        self.logger = get_logger("watchdog.monitoring.anomaly_detector")
 
     def evaluate(
         self,

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from watchdog.logging_setup import get_logger
-from watchdog.models import BatchResult, Outcome
+from watchdog.core.logging_setup import get_logger
+from watchdog.core.models import BatchResult, Outcome
 
 
 class QualityMetadata:
     def __init__(self) -> None:
-        self.logger = get_logger("watchdog.metadata")
+        self.logger = get_logger("watchdog.persistence.metadata")
 
     def record_batch(self, result: BatchResult) -> None:
         self.logger.info(

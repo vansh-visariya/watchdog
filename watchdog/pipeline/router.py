@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from enum import Enum
 
-from watchdog.exceptions import HaltError
-from watchdog.logging_setup import get_logger
-from watchdog.metrics import ROLLOUT_MODE, SHADOW_ROUTED, record_dlq
-from watchdog.models import BatchResult, Outcome, QuarantineRecord, ValidatedEvent
-from watchdog.producer import WatchDogProducer
+from watchdog.core.exceptions import HaltError
+from watchdog.core.logging_setup import get_logger
+from watchdog.monitoring.metrics import ROLLOUT_MODE, SHADOW_ROUTED, record_dlq
+from watchdog.core.models import BatchResult, Outcome, QuarantineRecord, ValidatedEvent
+from watchdog.pipeline.producer import WatchDogProducer
 
 
 class RolloutMode(str, Enum):
@@ -20,7 +20,7 @@ class Router:
     def __init__(self, producer: WatchDogProducer) -> None:
         self.producer = producer
         self.config = producer.config
-        self.logger = get_logger("watchdog.router")
+        self.logger = get_logger("watchdog.pipeline.router")
         self.mode = RolloutMode(self.config.rollout.mode)
         ROLLOUT_MODE.labels(mode=self.mode.value).set(1)
 

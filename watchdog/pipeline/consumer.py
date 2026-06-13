@@ -6,17 +6,17 @@ from typing import TYPE_CHECKING
 from confluent_kafka import Consumer, KafkaError, KafkaException, Message, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic
 
-from watchdog.logging_setup import get_logger
-from watchdog.metrics import BACKPRESSURE_ACTIVE
+from watchdog.core.logging_setup import get_logger
+from watchdog.monitoring.metrics import BACKPRESSURE_ACTIVE
 
 if TYPE_CHECKING:
-    from watchdog.config import WatchDogConfig
+    from watchdog.core.config import WatchDogConfig
 
 
 class MicroBatchConsumer:
     def __init__(self, config: WatchDogConfig) -> None:
         self.config = config
-        self.logger = get_logger("watchdog.consumer")
+        self.logger = get_logger("watchdog.pipeline.consumer")
 
         consumer_conf = {
             "bootstrap.servers": config.kafka_bootstrap_servers,

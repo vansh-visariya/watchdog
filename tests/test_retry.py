@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from watchdog.config import RetryConfig
-from watchdog.retry import RetryExhausted, retry_with_backoff
+from watchdog.core.config import RetryConfig
+from watchdog.core.retry import RetryExhausted, retry_with_backoff
 
 
 class TestRetryBackoff:

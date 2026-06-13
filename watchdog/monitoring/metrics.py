@@ -136,7 +136,7 @@ CONSECUTIVE_STALL_WINDOWS = Gauge(
 
 
 def record_lag_metrics(lag_stats) -> None:
-    from watchdog.models import LagStats
+    from watchdog.core.models import LagStats
     if not isinstance(lag_stats, LagStats):
         return
     P95_LAG_MS.set(lag_stats.p95_lag_ms)
@@ -145,7 +145,7 @@ def record_lag_metrics(lag_stats) -> None:
 
 
 def record_window_metrics(stall_signal) -> None:
-    from watchdog.models import StallSignal
+    from watchdog.core.models import StallSignal
     if not isinstance(stall_signal, StallSignal):
         return
     SHORT_WINDOW_VOLUME.set(stall_signal.current_short_volume)
@@ -155,7 +155,7 @@ def record_window_metrics(stall_signal) -> None:
 
 
 def record_anomaly_metrics(anomaly_signal) -> None:
-    from watchdog.models import AnomalySignal
+    from watchdog.core.models import AnomalySignal
     if not isinstance(anomaly_signal, AnomalySignal):
         return
     ANOMALY_SCORE.set(anomaly_signal.anomaly_score)

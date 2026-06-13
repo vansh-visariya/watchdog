@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 import fastavro
 import pytest
 
-from watchdog.avro_serde import AvroSerde
-from watchdog.exceptions import SchemaViolation
+from watchdog.validation.avro_serde import AvroSerde
+from watchdog.core.exceptions import SchemaViolation
 
 
 class TestAvroSerde:

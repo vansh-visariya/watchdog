@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 
-from watchdog.config import WatchDogConfig, RolloutConfig
-from watchdog.exceptions import HaltError
-from watchdog.models import (
+from watchdog.core.config import WatchDogConfig, RolloutConfig
+from watchdog.core.exceptions import HaltError
+from watchdog.core.models import (
     BatchResult,
     BatchStats,
     EventEnvelope,
@@ -14,7 +14,7 @@ from watchdog.models import (
     ReasonCode,
     ValidatedEvent,
 )
-from watchdog.router import Router, RolloutMode
+from watchdog.pipeline.router import Router, RolloutMode
 
 
 class TestRouter:

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from watchdog.circuit_breaker import CircuitBreaker
-from watchdog.config import CircuitBreakerConfig, WatchDogConfig
-from watchdog.models import BatchStats, Outcome
+from watchdog.pipeline.circuit_breaker import CircuitBreaker
+from watchdog.core.config import CircuitBreakerConfig, WatchDogConfig
+from watchdog.core.models import BatchStats, Outcome
 
 
 class TestCircuitBreaker:

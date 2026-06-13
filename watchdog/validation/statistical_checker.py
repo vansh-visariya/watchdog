@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from watchdog.config import WatchDogConfig
-from watchdog.models import BatchStats, ReasonCode, ValidatedEvent
+from watchdog.core.config import WatchDogConfig
+from watchdog.core.models import BatchStats, ReasonCode, ValidatedEvent
 
 
 class StatisticalChecker:

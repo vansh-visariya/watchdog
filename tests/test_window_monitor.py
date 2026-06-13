@@ -5,9 +5,9 @@ from typing import Iterator
 
 import pytest
 
-from watchdog.config import WatchDogConfig, WindowConfig, AnomalyConfig
-from watchdog.models import StallSignal
-from watchdog.window_monitor import SlidingWindowMonitor
+from watchdog.core.config import WatchDogConfig, WindowConfig, AnomalyConfig
+from watchdog.core.models import StallSignal
+from watchdog.monitoring.window_monitor import SlidingWindowMonitor
 
 
 class TestSlidingWindowMonitor:

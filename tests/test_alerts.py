@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from watchdog.config import (
+from watchdog.core.config import (
     WatchDogConfig,
     DatabaseConfig,
     NotificationConfig,
     AlertConfig,
 )
-from watchdog.models import BatchStats, LagStats, StallSignal, AnomalySignal
-from watchdog.alerts import AlertEvaluator, AlertLevel
+from watchdog.core.models import BatchStats, LagStats, StallSignal, AnomalySignal
+from watchdog.monitoring.alerts import AlertEvaluator, AlertLevel
 
 
 class TestAlertEvaluator:

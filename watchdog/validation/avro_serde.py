@@ -6,7 +6,7 @@ from pathlib import Path
 
 import fastavro
 
-from watchdog.exceptions import SchemaViolation
+from watchdog.core.exceptions import SchemaViolation
 
 DEFAULT_SCHEMA_PATH = Path("contracts/event-envelope.avsc")
 

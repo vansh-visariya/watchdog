@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from watchdog.config import (
+from watchdog.core.config import (
     AlertConfig,
     CircuitBreakerConfig,
     LevelThreshold,
@@ -14,7 +14,7 @@ from watchdog.config import (
     ValidationConfig,
     WatchDogConfig,
 )
-from watchdog.models import EventEnvelope, ReasonCode, ValidatedEvent
+from watchdog.core.models import EventEnvelope, ReasonCode, ValidatedEvent
 
 
 @pytest.fixture

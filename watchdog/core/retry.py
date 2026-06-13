@@ -6,7 +6,7 @@ from functools import wraps
 from typing import TYPE_CHECKING, Callable, Type
 
 if TYPE_CHECKING:
-    from watchdog.config import RetryConfig
+    from watchdog.core.config import RetryConfig
 
 
 class RetryExhausted(Exception):

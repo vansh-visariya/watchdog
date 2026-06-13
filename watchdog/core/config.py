@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
-from watchdog.exceptions import ConfigError
+from watchdog.core.exceptions import ConfigError
 
 load_dotenv()
 

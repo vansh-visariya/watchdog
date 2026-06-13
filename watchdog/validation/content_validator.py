@@ -4,9 +4,9 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from watchdog.config import FieldRule, ValidationConfig, WatchDogConfig
-from watchdog.exceptions import InvalidFieldValue, MissingRequiredField
-from watchdog.models import EventEnvelope, ReasonCode
+from watchdog.core.config import FieldRule, ValidationConfig, WatchDogConfig
+from watchdog.core.exceptions import InvalidFieldValue, MissingRequiredField
+from watchdog.core.models import EventEnvelope, ReasonCode
 
 
 class ContentValidator:

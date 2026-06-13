@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 import psycopg2
 import psycopg2.extras
 
-from watchdog.logging_setup import get_logger
+from watchdog.core.logging_setup import get_logger
 
 if TYPE_CHECKING:
-    from watchdog.config import WatchDogConfig
-    from watchdog.models import BatchResult
+    from watchdog.core.config import WatchDogConfig
+    from watchdog.core.models import BatchResult
 
 
 DDL_STATEMENTS = [
@@ -46,7 +46,7 @@ DDL_STATEMENTS = [
 class QualityStore:
     def __init__(self, config: WatchDogConfig) -> None:
         self.config = config
-        self.logger = get_logger("watchdog.quality_store")
+        self.logger = get_logger("watchdog.persistence.quality_store")
         self._buffer: list[dict] = []
         self._lock = threading.Lock()
         self._flush_thread: threading.Thread | None = None

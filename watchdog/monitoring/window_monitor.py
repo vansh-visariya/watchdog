@@ -4,9 +4,9 @@ import time
 from collections import defaultdict
 from datetime import UTC, datetime
 
-from watchdog.config import WatchDogConfig
-from watchdog.logging_setup import get_logger
-from watchdog.models import StallSignal, WindowSnapshot
+from watchdog.core.config import WatchDogConfig
+from watchdog.core.logging_setup import get_logger
+from watchdog.core.models import StallSignal, WindowSnapshot
 
 
 class SlidingWindowMonitor:
@@ -15,7 +15,7 @@ class SlidingWindowMonitor:
         self.baseline_window_sec = config.window.baseline_window_seconds
         self.stall_drop_ratio = config.window.stall_volume_drop_ratio
         self.stall_min_volume = config.window.stall_min_volume
-        self.logger = get_logger("watchdog.window_monitor")
+        self.logger = get_logger("watchdog.monitoring.window_monitor")
 
         self._short_buckets: dict[int, int] = defaultdict(int)
         self._baseline_events: list[tuple[float, int]] = []

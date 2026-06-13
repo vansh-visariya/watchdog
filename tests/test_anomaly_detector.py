@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from watchdog.config import WatchDogConfig, WindowConfig, AnomalyConfig
-from watchdog.anomaly_detector import AnomalyDetector
-from watchdog.models import (
+from watchdog.core.config import WatchDogConfig, WindowConfig, AnomalyConfig
+from watchdog.monitoring.anomaly_detector import AnomalyDetector
+from watchdog.core.models import (
     AnomalySignal,
     BatchStats,
     LagStats,

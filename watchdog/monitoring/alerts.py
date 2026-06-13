@@ -5,11 +5,11 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from watchdog.logging_setup import get_logger
+from watchdog.core.logging_setup import get_logger
 
 if TYPE_CHECKING:
-    from watchdog.config import WatchDogConfig
-    from watchdog.models import AnomalySignal, BatchStats, LagStats, StallSignal
+    from watchdog.core.config import WatchDogConfig
+    from watchdog.core.models import AnomalySignal, BatchStats, LagStats, StallSignal
 
 
 class AlertLevel(str, Enum):
@@ -55,7 +55,7 @@ ALERT_RUNBOOKS: dict[str, str] = {
 class AlertEvaluator:
     def __init__(self, config: WatchDogConfig) -> None:
         self.config = config
-        self.logger = get_logger("watchdog.alerts")
+        self.logger = get_logger("watchdog.monitoring.alerts")
         self._consecutive_stall = 0
         self._consecutive_anomaly = 0
         self._consecutive_null_rate_warn = 0

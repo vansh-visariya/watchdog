@@ -6,9 +6,9 @@ import json
 import fastavro
 import pytest
 
-from watchdog.exceptions import SchemaViolation
-from watchdog.models import EventEnvelope
-from watchdog.schema_validator import SchemaValidator
+from watchdog.core.exceptions import SchemaViolation
+from watchdog.core.models import EventEnvelope
+from watchdog.validation.schema_validator import SchemaValidator
 
 
 class TestSchemaValidator:

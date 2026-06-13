@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 
 from confluent_kafka import KafkaError, KafkaException, Producer
 
-from watchdog.avro_serde import AvroSerde
-from watchdog.logging_setup import get_logger
-from watchdog.metrics import RETRY_COUNT, SHADOW_ROUTED
-from watchdog.models import EventEnvelope, QuarantineRecord, ValidatedEvent
+from watchdog.validation.avro_serde import AvroSerde
+from watchdog.core.logging_setup import get_logger
+from watchdog.monitoring.metrics import RETRY_COUNT, SHADOW_ROUTED
+from watchdog.core.models import EventEnvelope, QuarantineRecord, ValidatedEvent
 
 if TYPE_CHECKING:
-    from watchdog.config import WatchDogConfig
+    from watchdog.core.config import WatchDogConfig
 
 
 class DeliveryStatus(Enum):
@@ -50,7 +50,7 @@ class IdempotencyGuard:
 class WatchDogProducer:
     def __init__(self, config: WatchDogConfig) -> None:
         self.config = config
-        self.logger = get_logger("watchdog.producer")
+        self.logger = get_logger("watchdog.pipeline.producer")
 
         producer_conf = {
             "bootstrap.servers": config.kafka_bootstrap_servers,

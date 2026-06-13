@@ -4,9 +4,9 @@ import json
 
 import pytest
 
-from watchdog.config import FieldRule, ValidationConfig, WatchDogConfig
-from watchdog.content_validator import ContentValidator
-from watchdog.models import EventEnvelope, ReasonCode
+from watchdog.core.config import FieldRule, ValidationConfig, WatchDogConfig
+from watchdog.validation.content_validator import ContentValidator
+from watchdog.core.models import EventEnvelope, ReasonCode
 
 
 class TestContentValidator:

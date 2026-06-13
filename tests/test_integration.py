@@ -10,22 +10,22 @@ from confluent_kafka import Consumer, KafkaError, Producer
 from confluent_kafka.admin import AdminClient, NewTopic
 from testcontainers.kafka import KafkaContainer
 
-from watchdog.avro_serde import AvroSerde
-from watchdog.circuit_breaker import CircuitBreaker
-from watchdog.config import WatchDogConfig
-from watchdog.content_validator import ContentValidator
-from watchdog.metadata import QualityMetadata
-from watchdog.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
-from watchdog.router import Router
-from watchdog.schema_validator import SchemaValidator
-from watchdog.statistical_checker import StatisticalChecker
+from watchdog.validation.avro_serde import AvroSerde
+from watchdog.pipeline.circuit_breaker import CircuitBreaker
+from watchdog.core.config import WatchDogConfig
+from watchdog.validation.content_validator import ContentValidator
+from watchdog.persistence.metadata import QualityMetadata
+from watchdog.core.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
+from watchdog.pipeline.router import Router
+from watchdog.validation.schema_validator import SchemaValidator
+from watchdog.validation.statistical_checker import StatisticalChecker
 
 
 pytestmark = pytest.mark.kafka
 
 
 def _make_config(bootstrap_servers: str) -> WatchDogConfig:
-    from watchdog.config import (
+    from watchdog.core.config import (
         AlertConfig,
         CircuitBreakerConfig,
         LevelThreshold,

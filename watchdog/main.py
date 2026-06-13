@@ -9,28 +9,28 @@ import click
 
 from prometheus_client import start_http_server
 
-from watchdog.alerts import AlertEvaluator
-from watchdog.anomaly_detector import AnomalyDetector
-from watchdog.circuit_breaker import CircuitBreaker
-from watchdog.config import DEFAULT_CONFIG_PATH, load_config
-from watchdog.content_validator import ContentValidator
-from watchdog.consumer import MicroBatchConsumer
-from watchdog.exceptions import HaltError, SchemaViolation, WatchDogError
-from watchdog.lag_tracker import LagTracker
-from watchdog.logging_setup import get_logger, setup_logging
-from watchdog.metrics import (
+from watchdog.monitoring.alerts import AlertEvaluator
+from watchdog.monitoring.anomaly_detector import AnomalyDetector
+from watchdog.pipeline.circuit_breaker import CircuitBreaker
+from watchdog.core.config import DEFAULT_CONFIG_PATH, load_config
+from watchdog.validation.content_validator import ContentValidator
+from watchdog.pipeline.consumer import MicroBatchConsumer
+from watchdog.core.exceptions import HaltError, SchemaViolation, WatchDogError
+from watchdog.monitoring.lag_tracker import LagTracker
+from watchdog.core.logging_setup import get_logger, setup_logging
+from watchdog.monitoring.metrics import (
     record_anomaly_metrics,
     record_batch_metrics,
     record_lag_metrics,
     record_window_metrics,
 )
-from watchdog.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
-from watchdog.producer import WatchDogProducer
-from watchdog.quality_store import QualityStore
-from watchdog.router import Router
-from watchdog.schema_validator import SchemaValidator
-from watchdog.statistical_checker import StatisticalChecker
-from watchdog.window_monitor import SlidingWindowMonitor
+from watchdog.core.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
+from watchdog.pipeline.producer import WatchDogProducer
+from watchdog.persistence.quality_store import QualityStore
+from watchdog.pipeline.router import Router
+from watchdog.validation.schema_validator import SchemaValidator
+from watchdog.validation.statistical_checker import StatisticalChecker
+from watchdog.monitoring.window_monitor import SlidingWindowMonitor
 
 
 class WatchDog:

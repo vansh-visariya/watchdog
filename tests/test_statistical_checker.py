@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from watchdog.config import LevelThreshold, ThresholdConfig, ValidationConfig, WatchDogConfig
-from watchdog.models import BatchStats, ReasonCode, ValidatedEvent
-from watchdog.statistical_checker import StatisticalChecker
+from watchdog.core.config import LevelThreshold, ThresholdConfig, ValidationConfig, WatchDogConfig
+from watchdog.core.models import BatchStats, ReasonCode, ValidatedEvent
+from watchdog.validation.statistical_checker import StatisticalChecker
 
 
 class TestStatisticalChecker:
@@ -89,7 +89,7 @@ def _make_checker() -> StatisticalChecker:
 
 
 def _make_event(violations: list[ReasonCode]) -> ValidatedEvent:
-    from watchdog.models import EventEnvelope
+    from watchdog.core.models import EventEnvelope
 
     return ValidatedEvent(
         envelope=EventEnvelope(

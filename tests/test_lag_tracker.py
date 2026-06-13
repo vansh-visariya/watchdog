@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from watchdog.config import WatchDogConfig, WindowConfig
-from watchdog.lag_tracker import LagTracker
+from watchdog.core.config import WatchDogConfig, WindowConfig
+from watchdog.monitoring.lag_tracker import LagTracker
 
 
 class TestLagTracker:
