@@ -40,9 +40,9 @@ class WatchDog:
         dry_run: bool = False,
     ) -> None:
         self.config = load_config(config_path)
-        self.config.dry_run = dry_run
+        if dry_run:
+            self.config.rollout.mode = "dry_run"
         self.logger = get_logger("watchdog.pipeline")
-        self.dry_run = dry_run
         self.running = True
 
         self.schema_validator = SchemaValidator()
@@ -55,8 +55,8 @@ class WatchDog:
         self.quality_store = QualityStore(self.config)
         self.alert_evaluator = AlertEvaluator(self.config)
         self.consumer = MicroBatchConsumer(self.config)
-        self.producer = WatchDogProducer(self.config) if not dry_run else None
-        self.router = Router(self.producer) if self.producer else None
+        self.producer = WatchDogProducer(self.config)
+        self.router = Router(self.producer)
 
         signal.signal(signal.SIGINT, self._handle_shutdown)
         signal.signal(signal.SIGTERM, self._handle_shutdown)
@@ -129,10 +129,7 @@ class WatchDog:
         batch.outcome = outcome
         batch.completed_at = datetime.now(UTC)
 
-        if self.producer and self.router:
-            self.router.route(batch, outcome, dry_run=False)
-        elif self.dry_run:
-            self._log_dry_run(batch)
+        self.router.route(batch, outcome)
 
         self.consumer.commit()
 
@@ -222,8 +219,7 @@ class WatchDog:
         self.running = False
         self.consumer.commit()
         self.consumer.close()
-        if self.producer:
-            self.producer.flush()
+        self.producer.flush()
         self.quality_store.stop()
         sys.exit(0)
 

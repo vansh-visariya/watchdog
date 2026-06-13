@@ -107,6 +107,28 @@ ANOMALY_ACTIVE = Gauge(
     "Anomaly signal active (0=normal, 1=anomalous)",
 )
 
+RETRY_COUNT = Counter(
+    "watchdog_producer_retries_total",
+    "Total producer retry attempts",
+    ["topic"],
+)
+
+ROLLOUT_MODE = Gauge(
+    "watchdog_rollout_mode",
+    "Current rollout mode (0=dry_run, 1=shadow, 2=enforcement)",
+    ["mode"],
+)
+
+SHADOW_ROUTED = Counter(
+    "watchdog_shadow_routed_total",
+    "Total events routed to shadow topic",
+)
+
+BACKPRESSURE_ACTIVE = Gauge(
+    "watchdog_backpressure_active",
+    "Backpressure active (0=off, 1=on)",
+)
+
 CONSECUTIVE_STALL_WINDOWS = Gauge(
     "watchdog_consecutive_stall_windows",
     "Number of consecutive windows with stall detected",

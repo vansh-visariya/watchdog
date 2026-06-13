@@ -1,21 +1,31 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from enum import Enum
 
 from watchdog.exceptions import HaltError
 from watchdog.logging_setup import get_logger
-from watchdog.metrics import record_dlq
+from watchdog.metrics import ROLLOUT_MODE, SHADOW_ROUTED, record_dlq
 from watchdog.models import BatchResult, Outcome, QuarantineRecord, ValidatedEvent
 from watchdog.producer import WatchDogProducer
+
+
+class RolloutMode(str, Enum):
+    DRY_RUN = "dry_run"
+    SHADOW = "shadow"
+    ENFORCEMENT = "enforcement"
 
 
 class Router:
     def __init__(self, producer: WatchDogProducer) -> None:
         self.producer = producer
+        self.config = producer.config
         self.logger = get_logger("watchdog.router")
+        self.mode = RolloutMode(self.config.rollout.mode)
+        ROLLOUT_MODE.labels(mode=self.mode.value).set(1)
 
-    def route(self, batch: BatchResult, outcome: Outcome, dry_run: bool = False) -> None:
-        if dry_run:
+    def route(self, batch: BatchResult, outcome: Outcome) -> None:
+        if self.mode == RolloutMode.DRY_RUN:
             self._log_routing(batch, outcome)
             return
 
@@ -52,7 +62,8 @@ class Router:
                 quarantined_count=batch.stats.quarantined,
             )
 
-        self.producer.flush()
+        if self.mode in (RolloutMode.SHADOW, RolloutMode.ENFORCEMENT):
+            self.producer.flush()
 
     def _build_quarantine(self, event: ValidatedEvent, batch_id: str) -> QuarantineRecord:
         return QuarantineRecord(
@@ -72,3 +83,7 @@ class Router:
             passed=batch.stats.passed,
             quarantined=batch.stats.quarantined,
         )
+
+    @property
+    def is_enforcing(self) -> bool:
+        return self.mode == RolloutMode.ENFORCEMENT

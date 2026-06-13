@@ -92,3 +92,29 @@ prometheus:
 notification:
   log_level: WARNING
   webhook_url: null
+
+retry:
+  max_attempts: 3
+  base_delay_ms: 100
+  max_delay_ms: 5000
+  jitter: true
+  total_deadline_ms: 30000
+
+backpressure:
+  max_inflight_batches: 10
+  pause_on_queue_depth: 100
+  rate_limit_records_per_sec: 0
+  throttle_on_lag: 10000
+
+rollout:
+  mode: enforcement
+  shadow_topic: shadow_sink
+  shadow_percentage: 0.0
+  enforcement_percentage: 1.0
+
+idempotency:
+  enabled: true
+  dedup_window_seconds: 3600
+  key_fields:
+    - event_id
+    - batch_id

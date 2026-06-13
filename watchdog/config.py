@@ -102,6 +102,38 @@ class NotificationConfig:
 
 
 @dataclass
+class RetryConfig:
+    max_attempts: int = 3
+    base_delay_ms: int = 100
+    max_delay_ms: int = 5000
+    jitter: bool = True
+    total_deadline_ms: int = 30000
+
+
+@dataclass
+class BackpressureConfig:
+    max_inflight_batches: int = 10
+    pause_on_queue_depth: int = 0
+    rate_limit_records_per_sec: int = 0
+    throttle_on_lag: int = 0
+
+
+@dataclass
+class RolloutConfig:
+    mode: str = "enforcement"
+    shadow_topic: str = "shadow_sink"
+    shadow_percentage: float = 0.0
+    enforcement_percentage: float = 1.0
+
+
+@dataclass
+class IdempotencyConfig:
+    enabled: bool = True
+    dedup_window_seconds: int = 3600
+    key_fields: list[str] = field(default_factory=lambda: ["event_id", "batch_id"])
+
+
+@dataclass
 class WatchDogConfig:
     schema: SchemaConfig = field(default_factory=SchemaConfig)
     validation: ValidationConfig = field(default_factory=ValidationConfig)
@@ -113,6 +145,10 @@ class WatchDogConfig:
     anomaly: AnomalyConfig = field(default_factory=AnomalyConfig)
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     notification: NotificationConfig = field(default_factory=NotificationConfig)
+    retry: RetryConfig = field(default_factory=RetryConfig)
+    backpressure: BackpressureConfig = field(default_factory=BackpressureConfig)
+    rollout: RolloutConfig = field(default_factory=RolloutConfig)
+    idempotency: IdempotencyConfig = field(default_factory=IdempotencyConfig)
 
     kafka_bootstrap_servers: str = "localhost:9092"
     schema_registry_url: str = "http://localhost:8081"
@@ -241,6 +277,38 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         webhook_url=os.getenv("ALERT_WEBHOOK_URL") or notif_raw.get("webhook_url"),
     )
 
+    retry_raw = raw.get("retry", {})
+    retry_config = RetryConfig(
+        max_attempts=int(retry_raw.get("max_attempts", 3)),
+        base_delay_ms=int(retry_raw.get("base_delay_ms", 100)),
+        max_delay_ms=int(retry_raw.get("max_delay_ms", 5000)),
+        jitter=retry_raw.get("jitter", True),
+        total_deadline_ms=int(retry_raw.get("total_deadline_ms", 30000)),
+    )
+
+    bp_raw = raw.get("backpressure", {})
+    backpressure_config = BackpressureConfig(
+        max_inflight_batches=int(bp_raw.get("max_inflight_batches", 10)),
+        pause_on_queue_depth=int(bp_raw.get("pause_on_queue_depth", 0)),
+        rate_limit_records_per_sec=int(bp_raw.get("rate_limit_records_per_sec", 0)),
+        throttle_on_lag=int(bp_raw.get("throttle_on_lag", 0)),
+    )
+
+    rollout_raw = raw.get("rollout", {})
+    rollout_config = RolloutConfig(
+        mode=rollout_raw.get("mode", "enforcement"),
+        shadow_topic=rollout_raw.get("shadow_topic", "shadow_sink"),
+        shadow_percentage=float(rollout_raw.get("shadow_percentage", 0.0)),
+        enforcement_percentage=float(rollout_raw.get("enforcement_percentage", 1.0)),
+    )
+
+    idem_raw = raw.get("idempotency", {})
+    idempotency_config = IdempotencyConfig(
+        enabled=idem_raw.get("enabled", True),
+        dedup_window_seconds=int(idem_raw.get("dedup_window_seconds", 3600)),
+        key_fields=idem_raw.get("key_fields", ["event_id", "batch_id"]),
+    )
+
     config = WatchDogConfig(
         schema=schema_config,
         validation=validation_config,
@@ -252,6 +320,10 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         anomaly=anomaly_config,
         database=database_config,
         notification=notification_config,
+        retry=retry_config,
+        backpressure=backpressure_config,
+        rollout=rollout_config,
+        idempotency=idempotency_config,
         kafka_bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
         schema_registry_url=os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081"),
         input_topic=os.getenv("INPUT_TOPIC", "raw_events"),
