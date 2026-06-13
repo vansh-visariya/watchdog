@@ -1,0 +1,67 @@
+{
+  "type": "record",
+  "name": "EventEnvelope",
+  "namespace": "watchdog.events.v1",
+  "doc": "Transport contract for WatchDog validation pipeline.",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "Stable unique event identifier."
+    },
+    {
+      "name": "event_type",
+      "type": "string",
+      "doc": "Business event name, for example transaction.created."
+    },
+    {
+      "name": "event_version",
+      "type": "int",
+      "doc": "Schema version of the producer payload contract."
+    },
+    {
+      "name": "producer",
+      "type": "string",
+      "doc": "Name of emitting service."
+    },
+    {
+      "name": "occurred_at",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Event-time timestamp in UTC."
+    },
+    {
+      "name": "partition_key",
+      "type": "string",
+      "doc": "Deterministic partitioning key."
+    },
+    {
+      "name": "payload_json",
+      "type": "string",
+      "doc": "Serialized JSON business payload."
+    },
+    {
+      "name": "trace_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null,
+      "doc": "Optional tracing correlation identifier."
+    },
+    {
+      "name": "headers",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": "string"
+        }
+      ],
+      "default": null,
+      "doc": "Optional transport headers."
+    }
+  ]
+}

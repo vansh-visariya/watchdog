@@ -1,0 +1,69 @@
+version: 1
+service: watchdog
+
+schema:
+  registry_compatibility_mode: backward
+  forbid_field_rename_without_alias: true
+  forbid_required_field_removal: true
+
+validation:
+  required_payload_fields:
+    - user_id
+    - timestamp
+    - price
+
+  field_rules:
+    timestamp:
+      accepted_formats:
+        - iso8601
+        - epoch_millis
+    price:
+      type: number
+      min: 0
+
+thresholds:
+  null_rate:
+    warning: 0.02
+    critical: 0.05
+
+  late_event_ratio:
+    warning: 0.01
+    critical: 0.02
+
+  schema_violation_rate:
+    warning: 0.10
+    critical: 0.20
+
+  pipeline_stall_drop_ratio:
+    warning: 0.30
+    critical: 0.40
+
+  validation_latency_p95_ms:
+    warning: 200
+    critical: 250
+
+circuit_breaker:
+  halt_on:
+    - schema_violation_rate_critical
+    - consecutive_batch_failures_3
+  quarantine_on:
+    - schema_violation
+    - missing_required_field
+    - invalid_field_value
+    - null_rate_exceeded
+    - lateness_exceeded
+    - anomaly_detected
+  manual_reset_required: true
+
+outcomes:
+  pass:
+    action: route_clean_sink
+  quarantine:
+    action: route_error_stream
+  halt:
+    action: stop_pipeline_and_alert
+
+alerts:
+  evaluation_window_minutes: 5
+  warning_consecutive_windows: 3
+  critical_multiplier: 2.0
