@@ -7,6 +7,9 @@ from pathlib import Path
 
 import click
 
+from prometheus_client import start_http_server
+
+from watchdog.alerts import AlertEvaluator
 from watchdog.anomaly_detector import AnomalyDetector
 from watchdog.circuit_breaker import CircuitBreaker
 from watchdog.config import DEFAULT_CONFIG_PATH, load_config
@@ -15,7 +18,6 @@ from watchdog.consumer import MicroBatchConsumer
 from watchdog.exceptions import HaltError, SchemaViolation, WatchDogError
 from watchdog.lag_tracker import LagTracker
 from watchdog.logging_setup import get_logger, setup_logging
-from watchdog.metadata import QualityMetadata
 from watchdog.metrics import (
     record_anomaly_metrics,
     record_batch_metrics,
@@ -24,6 +26,7 @@ from watchdog.metrics import (
 )
 from watchdog.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
 from watchdog.producer import WatchDogProducer
+from watchdog.quality_store import QualityStore
 from watchdog.router import Router
 from watchdog.schema_validator import SchemaValidator
 from watchdog.statistical_checker import StatisticalChecker
@@ -49,7 +52,8 @@ class WatchDog:
         self.window_monitor = SlidingWindowMonitor(self.config)
         self.lag_tracker = LagTracker(self.config)
         self.anomaly_detector = AnomalyDetector(self.config)
-        self.metadata = QualityMetadata()
+        self.quality_store = QualityStore(self.config)
+        self.alert_evaluator = AlertEvaluator(self.config)
         self.consumer = MicroBatchConsumer(self.config)
         self.producer = WatchDogProducer(self.config) if not dry_run else None
         self.router = Router(self.producer) if self.producer else None
@@ -58,12 +62,16 @@ class WatchDog:
         signal.signal(signal.SIGTERM, self._handle_shutdown)
 
     def run(self) -> None:
+        start_http_server(self.config.metrics_port)
+        self.quality_store.start_flush_worker()
+
         self.logger.info(
             "pipeline_started",
             input_topic=self.config.input_topic,
             clean_topic=self.config.clean_topic,
             error_topic=self.config.error_topic,
             dry_run=self.dry_run,
+            metrics_port=self.config.metrics_port,
         )
 
         while self.running:
@@ -85,6 +93,7 @@ class WatchDog:
 
         batch = BatchResult(started_at=datetime.now(UTC))
 
+        topic_context: dict[str, object] = {}
         for msg in messages:
             validated = self._validate_message(msg.value())
             if validated is None:
@@ -92,6 +101,15 @@ class WatchDog:
             batch.events.append(validated)
             self.window_monitor.record_event(validated.envelope.occurred_at)
             self.lag_tracker.record_event(validated.envelope.occurred_at)
+
+        if messages:
+            first = messages[0]
+            topic_context = {
+                "kafka_topic": first.topic() or self.config.input_topic,
+                "kafka_partition": first.partition(),
+                "kafka_offset_first": first.offset(),
+                "kafka_offset_last": messages[-1].offset(),
+            }
 
         if not batch.events:
             return
@@ -117,7 +135,23 @@ class WatchDog:
             self._log_dry_run(batch)
 
         self.consumer.commit()
-        self.metadata.record_batch(batch)
+
+        self.quality_store.record_batch(
+            result=batch,
+            p95_lag_ms=lag_stats.p95_lag_ms,
+            late_ratio=lag_stats.late_ratio,
+            stall_active=stall_signal.active,
+            anomaly_score=anomaly_signal.anomaly_score,
+        )
+
+        self.alert_evaluator.evaluate(
+            batch_stats=batch.stats,
+            lag_stats=lag_stats,
+            stall_signal=stall_signal,
+            anomaly_signal=anomaly_signal,
+        )
+        if outcome == Outcome.HALT:
+            self.alert_evaluator.fire_halt_alert(outcome.value)
 
         record_batch_metrics(
             passed=batch.stats.passed,
@@ -144,6 +178,7 @@ class WatchDog:
             "late_ratio": round(lag_stats.late_ratio, 4),
             "stall_active": stall_signal.active,
             "anomaly_score": round(anomaly_signal.anomaly_score, 3),
+            **topic_context,
         }
         if anomaly_signal.active:
             log_data["anomaly_details"] = anomaly_signal.details
@@ -189,6 +224,7 @@ class WatchDog:
         self.consumer.close()
         if self.producer:
             self.producer.flush()
+        self.quality_store.stop()
         sys.exit(0)
 
 

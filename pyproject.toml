@@ -25,6 +25,7 @@ dependencies = [
     "prometheus-client>=0.21",
     "python-dotenv>=1.0",
     "click>=8.1",
+    "psycopg2-binary>=2.9",
 ]
 
 [project.optional-dependencies]

@@ -89,6 +89,19 @@ class AnomalyConfig:
 
 
 @dataclass
+class DatabaseConfig:
+    url: str = "postgresql://watchdog:watchdog@localhost:5432/watchdog_quality"
+    batch_insert_size: int = 50
+    max_buffer_seconds: int = 10
+
+
+@dataclass
+class NotificationConfig:
+    log_level: str = "WARNING"
+    webhook_url: str | None = None
+
+
+@dataclass
 class WatchDogConfig:
     schema: SchemaConfig = field(default_factory=SchemaConfig)
     validation: ValidationConfig = field(default_factory=ValidationConfig)
@@ -98,6 +111,8 @@ class WatchDogConfig:
     alerts: AlertConfig = field(default_factory=AlertConfig)
     window: WindowConfig = field(default_factory=WindowConfig)
     anomaly: AnomalyConfig = field(default_factory=AnomalyConfig)
+    database: DatabaseConfig = field(default_factory=DatabaseConfig)
+    notification: NotificationConfig = field(default_factory=NotificationConfig)
 
     kafka_bootstrap_servers: str = "localhost:9092"
     schema_registry_url: str = "http://localhost:8081"
@@ -108,6 +123,7 @@ class WatchDogConfig:
     batch_size: int = 100
     batch_timeout_ms: int = 5000
     log_level: str = "INFO"
+    metrics_port: int = 9091
     dry_run: bool = False
 
 
@@ -211,6 +227,20 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         anomaly_score_threshold=float(anomaly_raw.get("score_threshold", 0.7)),
     )
 
+    db_raw = raw.get("database", {})
+    database_config = DatabaseConfig(
+        url=os.getenv("DATABASE_URL", db_raw.get("url", "postgresql://watchdog:watchdog@localhost:5432/watchdog_quality")),
+        batch_insert_size=int(db_raw.get("batch_insert_size", 50)),
+        max_buffer_seconds=int(db_raw.get("max_buffer_seconds", 10)),
+    )
+
+    prom_raw = raw.get("prometheus", {})
+    notif_raw = raw.get("notification", {})
+    notification_config = NotificationConfig(
+        log_level=notif_raw.get("log_level", "WARNING"),
+        webhook_url=os.getenv("ALERT_WEBHOOK_URL") or notif_raw.get("webhook_url"),
+    )
+
     config = WatchDogConfig(
         schema=schema_config,
         validation=validation_config,
@@ -220,6 +250,8 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         alerts=alert_config,
         window=window_config,
         anomaly=anomaly_config,
+        database=database_config,
+        notification=notification_config,
         kafka_bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
         schema_registry_url=os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081"),
         input_topic=os.getenv("INPUT_TOPIC", "raw_events"),
@@ -229,6 +261,7 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         batch_size=int(os.getenv("BATCH_SIZE", "100")),
         batch_timeout_ms=int(os.getenv("BATCH_TIMEOUT_MS", "5000")),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        metrics_port=int(os.getenv("METRICS_PORT", str(prom_raw.get("metrics_port", 9091)))),
     )
 
     _validate_config(config)

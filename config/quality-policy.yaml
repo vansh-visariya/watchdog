@@ -80,3 +80,15 @@ anomaly:
   lag_weight: 0.3
   violation_weight: 0.3
   score_threshold: 0.7
+
+database:
+  url: postgresql://watchdog:watchdog@localhost:5432/watchdog_quality
+  batch_insert_size: 50
+  max_buffer_seconds: 10
+
+prometheus:
+  metrics_port: 9091
+
+notification:
+  log_level: WARNING
+  webhook_url: null

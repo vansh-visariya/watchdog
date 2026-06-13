@@ -1,0 +1,162 @@
+{
+  "dashboard": {
+    "uid": "watchdog-quality",
+    "title": "WatchDog Data Quality",
+    "tags": ["watchdog", "data-quality", "kafka"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Records Processed",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(watchdog_records_total[1m])",
+            "legendFormat": "{{outcome}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [{ "format": "short" }, { "format": "short" }]
+      },
+      {
+        "id": 2,
+        "title": "Null Rate",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_null_rate",
+            "legendFormat": "null_rate",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [
+          { "value": 0.02, "colorMode": "warning", "op": "gt", "fill": true },
+          { "value": 0.05, "colorMode": "critical", "op": "gt", "fill": true }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Batch Latency (ms)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(watchdog_batch_duration_seconds_bucket[1m])",
+            "legendFormat": "{{le}}s",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Pipeline Stall Active",
+        "type": "stat",
+        "gridPos": { "x": 8, "y": 8, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "watchdog_stall_active",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [
+          { "value": 0, "color": "green" },
+          { "value": 1, "color": "red" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Anomaly Active",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 8, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "watchdog_anomaly_active",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [
+          { "value": 0, "color": "green" },
+          { "value": 1, "color": "red" }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "P95 Event Lag (ms)",
+        "type": "graph",
+        "gridPos": { "x": 8, "y": 12, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_p95_lag_ms",
+            "legendFormat": "p95_lag",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Anomaly Score",
+        "type": "graph",
+        "gridPos": { "x": 16, "y": 12, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_anomaly_score",
+            "legendFormat": "anomaly_score",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [
+          { "value": 0.7, "colorMode": "critical", "op": "gt", "fill": true }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Schema Violation Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_schema_violation_rate",
+            "legendFormat": "schema_violation_rate",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Late Event Ratio",
+        "type": "graph",
+        "gridPos": { "x": 8, "y": 20, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_late_event_ratio",
+            "legendFormat": "late_ratio",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Short Window Volume vs Baseline",
+        "type": "graph",
+        "gridPos": { "x": 16, "y": 20, "w": 8, "h": 8 },
+        "targets": [
+          {
+            "expr": "watchdog_short_window_volume",
+            "legendFormat": "current",
+            "refId": "A"
+          },
+          {
+            "expr": "watchdog_baseline_volume_avg",
+            "legendFormat": "baseline",
+            "refId": "B"
+          }
+        ]
+      }
+    ]
+  }
+}
