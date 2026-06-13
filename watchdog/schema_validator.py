@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+from datetime import datetime
 from pathlib import Path
 
 import fastavro
@@ -66,9 +67,17 @@ class SchemaValidator:
             event_type=record["event_type"],
             event_version=record["event_version"],
             producer=record["producer"],
-            occurred_at=record["occurred_at"],
+            occurred_at=self._to_epoch_millis(record["occurred_at"]),
             partition_key=record["partition_key"],
             payload_json=record["payload_json"],
             trace_id=record.get("trace_id"),
             headers=record.get("headers"),
         )
+
+    @staticmethod
+    def _to_epoch_millis(value: object) -> int:
+        if isinstance(value, datetime):
+            return int(value.timestamp() * 1000)
+        if isinstance(value, int):
+            return value
+        raise SchemaViolation(f"Unexpected occurred_at type: {type(value).__name__}")
