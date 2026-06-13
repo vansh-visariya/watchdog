@@ -67,3 +67,16 @@ alerts:
   evaluation_window_minutes: 5
   warning_consecutive_windows: 3
   critical_multiplier: 2.0
+
+window:
+  short_window_seconds: 60
+  baseline_window_seconds: 3600
+  max_allowed_lag_ms: 60000
+  stall_drop_ratio: 0.40
+  stall_min_volume: 5
+
+anomaly:
+  volume_weight: 0.4
+  lag_weight: 0.3
+  violation_weight: 0.3
+  score_threshold: 0.7

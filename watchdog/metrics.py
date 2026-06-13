@@ -64,3 +64,77 @@ def record_batch_metrics(
 
 def record_dlq(reason_code: str) -> None:
     DLQ_RECORDS.labels(reason_code=reason_code).inc()
+
+
+EVENT_LAG_MS = Histogram(
+    "watchdog_event_lag_ms",
+    "Event-time to processing-time lag in milliseconds",
+    buckets=[100, 500, 1000, 5000, 10000, 30000, 60000, 120000],
+)
+
+LATE_EVENT_RATIO = Gauge(
+    "watchdog_late_event_ratio",
+    "Ratio of late events in current batch",
+)
+
+P95_LAG_MS = Gauge(
+    "watchdog_p95_lag_ms",
+    "P95 event lag across recent samples",
+)
+
+SHORT_WINDOW_VOLUME = Gauge(
+    "watchdog_short_window_volume",
+    "Event count in current short window",
+)
+
+BASELINE_VOLUME_AVG = Gauge(
+    "watchdog_baseline_volume_avg",
+    "Average volume per short-window bucket over baseline period",
+)
+
+STALL_ACTIVE = Gauge(
+    "watchdog_stall_active",
+    "Pipeline stall signal (0=normal, 1=stalling)",
+)
+
+ANOMALY_SCORE = Gauge(
+    "watchdog_anomaly_score",
+    "Combined anomaly score from volume, lag, and violation signals",
+)
+
+ANOMALY_ACTIVE = Gauge(
+    "watchdog_anomaly_active",
+    "Anomaly signal active (0=normal, 1=anomalous)",
+)
+
+CONSECUTIVE_STALL_WINDOWS = Gauge(
+    "watchdog_consecutive_stall_windows",
+    "Number of consecutive windows with stall detected",
+)
+
+
+def record_lag_metrics(lag_stats) -> None:
+    from watchdog.models import LagStats
+    if not isinstance(lag_stats, LagStats):
+        return
+    P95_LAG_MS.set(lag_stats.p95_lag_ms)
+    LATE_EVENT_RATIO.set(lag_stats.late_ratio)
+    EVENT_LAG_MS.observe(lag_stats.max_seen_lag_ms)
+
+
+def record_window_metrics(stall_signal) -> None:
+    from watchdog.models import StallSignal
+    if not isinstance(stall_signal, StallSignal):
+        return
+    SHORT_WINDOW_VOLUME.set(stall_signal.current_short_volume)
+    BASELINE_VOLUME_AVG.set(stall_signal.baseline_avg_volume)
+    STALL_ACTIVE.set(1 if stall_signal.active else 0)
+    CONSECUTIVE_STALL_WINDOWS.set(stall_signal.consecutive_stall_windows)
+
+
+def record_anomaly_metrics(anomaly_signal) -> None:
+    from watchdog.models import AnomalySignal
+    if not isinstance(anomaly_signal, AnomalySignal):
+        return
+    ANOMALY_SCORE.set(anomaly_signal.anomaly_score)
+    ANOMALY_ACTIVE.set(1 if anomaly_signal.active else 0)

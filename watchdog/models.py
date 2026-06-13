@@ -104,3 +104,54 @@ class QuarantineRecord:
     batch_id: str
     trace_id: str | None = None
     error_detail: str | None = None
+
+
+@dataclass
+class WindowSnapshot:
+    window_start: datetime
+    window_end: datetime
+    record_count: int
+    avg_lag_ms: float = 0.0
+    p95_lag_ms: float = 0.0
+
+    @property
+    def volume_per_second(self) -> float:
+        duration = (self.window_end - self.window_start).total_seconds()
+        if duration <= 0:
+            return 0.0
+        return self.record_count / duration
+
+
+@dataclass
+class LagStats:
+    max_seen_lag_ms: float = 0.0
+    p95_lag_ms: float = 0.0
+    late_event_count: int = 0
+    total_event_count: int = 0
+
+    @property
+    def late_ratio(self) -> float:
+        if self.total_event_count == 0:
+            return 0.0
+        return self.late_event_count / self.total_event_count
+
+
+@dataclass
+class StallSignal:
+    active: bool = False
+    current_short_volume: int = 0
+    baseline_avg_volume: float = 0.0
+    drop_ratio: float = 0.0
+    stall_detected_at: datetime | None = None
+    consecutive_stall_windows: int = 0
+
+
+@dataclass
+class AnomalySignal:
+    active: bool = False
+    anomaly_score: float = 0.0
+    volume_contribution: float = 0.0
+    lag_contribution: float = 0.0
+    violation_contribution: float = 0.0
+    detected_at: datetime | None = None
+    details: list[str] = field(default_factory=list)

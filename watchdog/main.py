@@ -7,19 +7,27 @@ from pathlib import Path
 
 import click
 
+from watchdog.anomaly_detector import AnomalyDetector
 from watchdog.circuit_breaker import CircuitBreaker
 from watchdog.config import DEFAULT_CONFIG_PATH, load_config
 from watchdog.content_validator import ContentValidator
 from watchdog.consumer import MicroBatchConsumer
 from watchdog.exceptions import HaltError, SchemaViolation, WatchDogError
+from watchdog.lag_tracker import LagTracker
 from watchdog.logging_setup import get_logger, setup_logging
 from watchdog.metadata import QualityMetadata
-from watchdog.metrics import record_batch_metrics
+from watchdog.metrics import (
+    record_anomaly_metrics,
+    record_batch_metrics,
+    record_lag_metrics,
+    record_window_metrics,
+)
 from watchdog.models import BatchResult, Outcome, ReasonCode, ValidatedEvent
 from watchdog.producer import WatchDogProducer
 from watchdog.router import Router
 from watchdog.schema_validator import SchemaValidator
 from watchdog.statistical_checker import StatisticalChecker
+from watchdog.window_monitor import SlidingWindowMonitor
 
 
 class WatchDog:
@@ -38,6 +46,9 @@ class WatchDog:
         self.content_validator = ContentValidator(self.config)
         self.statistical_checker = StatisticalChecker(self.config)
         self.circuit_breaker = CircuitBreaker(self.config)
+        self.window_monitor = SlidingWindowMonitor(self.config)
+        self.lag_tracker = LagTracker(self.config)
+        self.anomaly_detector = AnomalyDetector(self.config)
         self.metadata = QualityMetadata()
         self.consumer = MicroBatchConsumer(self.config)
         self.producer = WatchDogProducer(self.config) if not dry_run else None
@@ -79,11 +90,22 @@ class WatchDog:
             if validated is None:
                 continue
             batch.events.append(validated)
+            self.window_monitor.record_event(validated.envelope.occurred_at)
+            self.lag_tracker.record_event(validated.envelope.occurred_at)
 
         if not batch.events:
             return
 
         batch.stats = self.statistical_checker.check_batch(batch.events)
+
+        window_stats = self.window_monitor.snapshot_short_window()
+        stall_signal = self.window_monitor.evaluate()
+        lag_stats = self.lag_tracker.compute_batch_stats()
+        anomaly_signal = self.anomaly_detector.evaluate(
+            batch_stats=batch.stats,
+            lag_stats=lag_stats,
+            stall_signal=stall_signal,
+        )
 
         outcome = self.circuit_breaker.evaluate(batch.stats)
         batch.outcome = outcome
@@ -105,17 +127,28 @@ class WatchDog:
             schema_violation_rate=batch.stats.schema_violation_rate,
             latency_ms=batch.latency_ms,
         )
+        record_lag_metrics(lag_stats)
+        record_window_metrics(stall_signal)
+        record_anomaly_metrics(anomaly_signal)
 
-        self.logger.info(
-            "batch_complete",
-            batch_id=batch.batch_id,
-            outcome=outcome.value,
-            passed=batch.stats.passed,
-            quarantined=batch.stats.quarantined,
-            null_rate=round(batch.stats.null_rate, 4),
-            schema_violation_rate=round(batch.stats.schema_violation_rate, 4),
-            latency_ms=round(batch.latency_ms, 2),
-        )
+        log_data: dict = {
+            "batch_id": batch.batch_id,
+            "outcome": outcome.value,
+            "passed": batch.stats.passed,
+            "quarantined": batch.stats.quarantined,
+            "null_rate": round(batch.stats.null_rate, 4),
+            "schema_violation_rate": round(batch.stats.schema_violation_rate, 4),
+            "latency_ms": round(batch.latency_ms, 2),
+            "window_volume": window_stats.record_count if window_stats else 0,
+            "p95_lag_ms": round(lag_stats.p95_lag_ms, 2),
+            "late_ratio": round(lag_stats.late_ratio, 4),
+            "stall_active": stall_signal.active,
+            "anomaly_score": round(anomaly_signal.anomaly_score, 3),
+        }
+        if anomaly_signal.active:
+            log_data["anomaly_details"] = anomaly_signal.details
+
+        self.logger.info("batch_complete", **log_data)
 
     def _validate_message(self, raw_bytes: bytes | None) -> ValidatedEvent | None:
         if raw_bytes is None:

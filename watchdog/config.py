@@ -72,6 +72,23 @@ class AlertConfig:
 
 
 @dataclass
+class WindowConfig:
+    short_window_seconds: int = 60
+    baseline_window_seconds: int = 3600
+    max_allowed_lag_ms: int = 60000
+    stall_volume_drop_ratio: float = 0.40
+    stall_min_volume: int = 5
+
+
+@dataclass
+class AnomalyConfig:
+    volume_weight: float = 0.4
+    lag_weight: float = 0.3
+    violation_weight: float = 0.3
+    anomaly_score_threshold: float = 0.7
+
+
+@dataclass
 class WatchDogConfig:
     schema: SchemaConfig = field(default_factory=SchemaConfig)
     validation: ValidationConfig = field(default_factory=ValidationConfig)
@@ -79,6 +96,8 @@ class WatchDogConfig:
     circuit_breaker: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
     outcomes: OutcomeConfig = field(default_factory=OutcomeConfig)
     alerts: AlertConfig = field(default_factory=AlertConfig)
+    window: WindowConfig = field(default_factory=WindowConfig)
+    anomaly: AnomalyConfig = field(default_factory=AnomalyConfig)
 
     kafka_bootstrap_servers: str = "localhost:9092"
     schema_registry_url: str = "http://localhost:8081"
@@ -175,6 +194,23 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         critical_multiplier=float(alerts_raw.get("critical_multiplier", 2.0)),
     )
 
+    window_raw = raw.get("window", {})
+    window_config = WindowConfig(
+        short_window_seconds=int(window_raw.get("short_window_seconds", 60)),
+        baseline_window_seconds=int(window_raw.get("baseline_window_seconds", 3600)),
+        max_allowed_lag_ms=int(window_raw.get("max_allowed_lag_ms", 60000)),
+        stall_volume_drop_ratio=float(window_raw.get("stall_drop_ratio", 0.40)),
+        stall_min_volume=int(window_raw.get("stall_min_volume", 5)),
+    )
+
+    anomaly_raw = raw.get("anomaly", {})
+    anomaly_config = AnomalyConfig(
+        volume_weight=float(anomaly_raw.get("volume_weight", 0.4)),
+        lag_weight=float(anomaly_raw.get("lag_weight", 0.3)),
+        violation_weight=float(anomaly_raw.get("violation_weight", 0.3)),
+        anomaly_score_threshold=float(anomaly_raw.get("score_threshold", 0.7)),
+    )
+
     config = WatchDogConfig(
         schema=schema_config,
         validation=validation_config,
@@ -182,6 +218,8 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> WatchDogConfig
         circuit_breaker=circuit_breaker_config,
         outcomes=outcome_config,
         alerts=alert_config,
+        window=window_config,
+        anomaly=anomaly_config,
         kafka_bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
         schema_registry_url=os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081"),
         input_topic=os.getenv("INPUT_TOPIC", "raw_events"),
